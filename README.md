@@ -37,7 +37,7 @@ A secure REST API for product management with JWT authentication built using Spr
 
 ```bash
 git clone <repository-url>
-cd product-management-system
+cd productmanagement
 ```
 
 ### 2. Configure MySQL Database

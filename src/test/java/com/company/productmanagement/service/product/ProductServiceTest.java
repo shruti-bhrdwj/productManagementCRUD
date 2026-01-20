@@ -120,7 +120,7 @@ class ProductServiceTest {
     }
     
     @Test
-    void shouldThrowExceptionWhenProductNotFound() {
+    void shouldFailWhenProductNotFound() {
         // Given
         when(productRepository.findById(999L)).thenReturn(Optional.empty());
         
@@ -171,7 +171,7 @@ class ProductServiceTest {
     }
     
     @Test
-    void shouldThrowExceptionWhenDeletingNonExistentProduct() {
+    void shouldFailWhenDeletingNonExistentProduct() {
         // Given
         when(productRepository.existsById(999L)).thenReturn(false);
         

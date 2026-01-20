@@ -1,218 +1,204 @@
 package com.company.productmanagement.controller.product;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
 
+import com.company.productmanagement.controller.ProductController;
 import com.company.productmanagement.dto.product.ProductRequest;
 import com.company.productmanagement.dto.product.ProductResponse;
-import com.company.productmanagement.entity.Product;
 import com.company.productmanagement.exception.custom.ProductNotFoundException;
-import com.company.productmanagement.repository.ProductRepository;
+import com.company.productmanagement.security.JwtAuthenticationFilter;
 import com.company.productmanagement.service.ProductService;
+import com.company.productmanagement.utils.ApiEndpointConstants;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+import org.springframework.security.core.userdetails.UserDetailsService;
 
 /**
- * Unit tests for ProductService
- * Tests all CRUD operations
+ * Unit tests for ProductController
+ * Uses MockMvc to test REST endpoints
  * 
  * @author Shruti Sharma
  */
-@ExtendWith(MockitoExtension.class)
-class ProductServiceTest {
+@WebMvcTest(ProductController.class)
+@AutoConfigureMockMvc(addFilters = false)
+class ProductControllerTest {
     
-    @Mock
-    private ProductRepository productRepository;
+    @Autowired
+    private MockMvc mockMvc;
     
-    @InjectMocks
+    @Autowired
+    private ObjectMapper objectMapper;
+    
+    @MockBean
     private ProductService productService;
     
-    private Product product;
-    private ProductRequest productRequest;
+    @MockBean
+    private JwtAuthenticationFilter jwtAuthenticationFilter;
     
-    @BeforeEach
-    void setUp() {
-        product = Product.builder()
-                .id(1L)
-                .name("Test Product")
-                .description("Test Description")
-                .price(new BigDecimal("99.99"))
-                .quantity(10)
-                .category("Electronics")
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
-                .build();
-        
-        productRequest = new ProductRequest(
-                "Test Product",
-                "Test Description",
-                new BigDecimal("99.99"),
-                10,
-                "Electronics"
-        );
-    }
+    @MockBean
+    private UserDetailsService userDetailsService;
     
     @Test
-    void shouldCreateProductSuccessfully() {
+    void shouldCreateProductSuccessfully() throws Exception {
         // Given
-        when(productRepository.save(any(Product.class))).thenReturn(product);
+        ProductRequest request = new ProductRequest(
+                "Test Product", "Description", new BigDecimal("99.99"), 10, "Electronics");
+        ProductResponse response = new ProductResponse(
+                1L, "Test Product", "Description", new BigDecimal("99.99"), 
+                10, "Electronics", LocalDateTime.now(), LocalDateTime.now());
         
-        // When
-        ProductResponse response = productService.createProduct(productRequest);
-        
-        // Then
-        assertNotNull(response);
-        assertEquals(product.getId(), response.id());
-        assertEquals(product.getName(), response.name());
-        assertEquals(product.getPrice(), response.price());
-        
-        verify(productRepository).save(any(Product.class));
-    }
-    
-    @Test
-    void shouldGetAllProductsSuccessfully() {
-        // Given
-        Product product2 = Product.builder()
-                .id(2L)
-                .name("Product 2")
-                .price(new BigDecimal("49.99"))
-                .quantity(5)
-                .build();
-        
-        when(productRepository.findAll()).thenReturn(Arrays.asList(product, product2));
-        
-        // When
-        List<ProductResponse> products = productService.getAllProducts();
-        
-        // Then
-        assertNotNull(products);
-        assertEquals(2, products.size());
-        
-        verify(productRepository).findAll();
-    }
-    
-    @Test
-    void shouldGetProductByIdSuccessfully() {
-        // Given
-        when(productRepository.findById(1L)).thenReturn(Optional.of(product));
-        
-        // When
-        ProductResponse response = productService.getProductById(1L);
-        
-        // Then
-        assertNotNull(response);
-        assertEquals(product.getId(), response.id());
-        assertEquals(product.getName(), response.name());
-        
-        verify(productRepository).findById(1L);
-    }
-    
-    @Test
-    void shouldThrowExceptionWhenProductNotFound() {
-        // Given
-        when(productRepository.findById(999L)).thenReturn(Optional.empty());
+        when(productService.createProduct(any(ProductRequest.class))).thenReturn(response);
         
         // When & Then
-        assertThrows(ProductNotFoundException.class, () -> productService.getProductById(999L));
-        
-        verify(productRepository).findById(999L);
+        mockMvc.perform(post(ApiEndpointConstants.PRODUCT_BASE)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.name").value("Test Product"))
+                .andExpect(jsonPath("$.price").value(99.99));
     }
     
     @Test
-    void shouldUpdateProductSuccessfully() {
-        // Given
-        when(productRepository.findById(1L)).thenReturn(Optional.of(product));
-        when(productRepository.save(any(Product.class))).thenReturn(product);
-        
-        ProductRequest updateRequest = new ProductRequest(
-                "Updated Product",
-                "Updated Description",
-                new BigDecimal("149.99"),
-                20,
-                "Electronics"
-        );
-        
-        // When
-        ProductResponse response = productService.updateProduct(1L, updateRequest);
-        
-        // Then
-        assertNotNull(response);
-        assertEquals("Updated Product", product.getName());
-        assertEquals(new BigDecimal("149.99"), product.getPrice());
-        
-        verify(productRepository).findById(1L);
-        verify(productRepository).save(product);
-    }
-    
-    @Test
-    void shouldDeleteProductSuccessfully() {
-        // Given
-        when(productRepository.existsById(1L)).thenReturn(true);
-        doNothing().when(productRepository).deleteById(1L);
-        
-        // When
-        productService.deleteProduct(1L);
-        
-        // Then
-        verify(productRepository).existsById(1L);
-        verify(productRepository).deleteById(1L);
-    }
-    
-    @Test
-    void shouldThrowExceptionWhenDeletingNonExistentProduct() {
-        // Given
-        when(productRepository.existsById(999L)).thenReturn(false);
+    void shouldReturnBadRequestWhenProductDataIsInvalid() throws Exception {
+        // Given - Missing required fields
+        ProductRequest request = new ProductRequest("", "", null, null, null);
         
         // When & Then
-        assertThrows(ProductNotFoundException.class, () -> productService.deleteProduct(999L));
-        
-        verify(productRepository).existsById(999L);
-        verify(productRepository, never()).deleteById(anyLong());
+        mockMvc.perform(post(ApiEndpointConstants.PRODUCT_BASE)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
     }
     
     @Test
-    void shouldSearchProductsByName() {
+    void shouldGetAllProductsSuccessfully() throws Exception {
         // Given
-        when(productRepository.findByNameContainingIgnoreCase("Test"))
-                .thenReturn(Arrays.asList(product));
+        List<ProductResponse> products = Arrays.asList(
+                new ProductResponse(1L, "Product 1", "Desc 1", new BigDecimal("99.99"), 
+                        10, "Electronics", LocalDateTime.now(), LocalDateTime.now()),
+                new ProductResponse(2L, "Product 2", "Desc 2", new BigDecimal("149.99"), 
+                        5, "Books", LocalDateTime.now(), LocalDateTime.now())
+        );
         
-        // When
-        List<ProductResponse> products = productService.searchProductsByName("Test");
+        when(productService.getAllProducts()).thenReturn(products);
         
-        // Then
-        assertNotNull(products);
-        assertEquals(1, products.size());
-        assertEquals("Test Product", products.get(0).name());
-        
-        verify(productRepository).findByNameContainingIgnoreCase("Test");
+        // When & Then
+        mockMvc.perform(get(ApiEndpointConstants.PRODUCT_BASE))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].name").value("Product 1"))
+                .andExpect(jsonPath("$[1].name").value("Product 2"));
     }
     
     @Test
-    void shouldGetProductsByCategory() {
+    void shouldGetProductByIdSuccessfully() throws Exception {
         // Given
-        when(productRepository.findByCategory("Electronics"))
-                .thenReturn(Arrays.asList(product));
+        ProductResponse response = new ProductResponse(
+                1L, "Test Product", "Description", new BigDecimal("99.99"), 
+                10, "Electronics", LocalDateTime.now(), LocalDateTime.now());
         
-        // When
-        List<ProductResponse> products = productService.getProductsByCategory("Electronics");
+        when(productService.getProductById(1L)).thenReturn(response);
         
-        // Then
-        assertNotNull(products);
-        assertEquals(1, products.size());
-        assertEquals("Electronics", products.get(0).category());
+        // When & Then
+        mockMvc.perform(get(ApiEndpointConstants.PRODUCT_BASE + "/1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.name").value("Test Product"));
+    }
+    
+    @Test
+    void shouldReturnNotFoundWhenProductDoesNotExist() throws Exception {
+        // Given
+        when(productService.getProductById(999L))
+                .thenThrow(new ProductNotFoundException(999L));
         
-        verify(productRepository).findByCategory("Electronics");
+        // When & Then
+        mockMvc.perform(get(ApiEndpointConstants.PRODUCT_BASE + "/999"))
+                .andExpect(status().isNotFound());
+    }
+    
+    @Test
+    void shouldUpdateProductSuccessfully() throws Exception {
+        // Given
+        ProductRequest request = new ProductRequest(
+                "Updated Product", "Updated Desc", new BigDecimal("149.99"), 20, "Electronics");
+        ProductResponse response = new ProductResponse(
+                1L, "Updated Product", "Updated Desc", new BigDecimal("149.99"), 
+                20, "Electronics", LocalDateTime.now(), LocalDateTime.now());
+        
+        when(productService.updateProduct(eq(1L), any(ProductRequest.class))).thenReturn(response);
+        
+        // When & Then
+        mockMvc.perform(put(ApiEndpointConstants.PRODUCT_BASE + "/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value("Updated Product"))
+                .andExpect(jsonPath("$.price").value(149.99));
+    }
+    
+    @Test
+    void shouldDeleteProductSuccessfully() throws Exception {
+        // Given
+        doNothing().when(productService).deleteProduct(1L);
+        
+        // When & Then
+        mockMvc.perform(delete(ApiEndpointConstants.PRODUCT_BASE + "/1"))
+                .andExpect(status().isNoContent());
+        
+        verify(productService, times(1)).deleteProduct(1L);
+    }
+    
+    @Test
+    void shouldSearchProductsByName() throws Exception {
+        // Given
+        List<ProductResponse> products = Arrays.asList(
+                new ProductResponse(1L, "Test Product", "Desc", new BigDecimal("99.99"), 
+                        10, "Electronics", LocalDateTime.now(), LocalDateTime.now())
+        );
+        
+        when(productService.searchProductsByName("Test")).thenReturn(products);
+        
+        // When & Then
+        mockMvc.perform(get(ApiEndpointConstants.PRODUCT_BASE + "/search")
+                        .param("name", "Test"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].name").value("Test Product"));
+    }
+    
+    @Test
+    void shouldGetProductsByCategory() throws Exception {
+        // Given
+        List<ProductResponse> products = Arrays.asList(
+                new ProductResponse(1L, "Product 1", "Desc", new BigDecimal("99.99"), 
+                        10, "Electronics", LocalDateTime.now(), LocalDateTime.now())
+        );
+        
+        when(productService.getProductsByCategory("Electronics")).thenReturn(products);
+        
+        // When & Then
+        mockMvc.perform(get(ApiEndpointConstants.PRODUCT_BASE + "/category/Electronics"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].category").value("Electronics"));
     }
 }

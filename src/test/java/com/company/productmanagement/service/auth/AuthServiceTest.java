@@ -92,7 +92,7 @@ class AuthServiceTest {
     }
     
     @Test
-    void shouldThrowExceptionWhenUsernameAlreadyExists() {
+    void shouldFailWhenUsernameAlreadyExists() {
         // Given
         when(userRepository.existsByUsername(registerRequest.username())).thenReturn(true);
         
@@ -125,7 +125,7 @@ class AuthServiceTest {
     }
     
     @Test
-    void shouldThrowExceptionWhenCredentialsAreInvalid() {
+    void shouldFailWhenCredentialsAreInvalid() {
         // Given
         when(authenticationManager.authenticate(any(UsernamePasswordAuthenticationToken.class)))
                 .thenThrow(new BadCredentialsException("Invalid credentials"));
