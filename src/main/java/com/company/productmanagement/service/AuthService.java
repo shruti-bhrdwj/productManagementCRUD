@@ -1,6 +1,8 @@
 package com.company.productmanagement.service;
 
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -8,13 +10,12 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.company.productmanagement.dto.auth.AuthResponse;
 import com.company.productmanagement.dto.auth.LoginRequest;
 import com.company.productmanagement.dto.auth.RegisterRequest;
 import com.company.productmanagement.entity.User;
-import com.company.productmanagement.exception.custom.InvalidCredentialsException;
-import com.company.productmanagement.exception.custom.UserAlreadyExistsException;
 import com.company.productmanagement.repository.UserRepository;
 import com.company.productmanagement.utils.JwtUtils;
 
@@ -45,7 +46,8 @@ public class AuthService {
     public AuthResponse register(RegisterRequest request) {
         // Check if username already exists
         if (userRepository.existsByUsername(request.username())) {
-            throw new UserAlreadyExistsException(request.username(), "username");
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                "a-2");
         }
         
         // Create new user
@@ -90,7 +92,8 @@ public class AuthService {
             return new AuthResponse(token, user.getUsername(), user.getEmail());
             
         } catch (BadCredentialsException e) {
-            throw new InvalidCredentialsException("Invalid username or password");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED,
+                "a-1");
         }
     }
 }

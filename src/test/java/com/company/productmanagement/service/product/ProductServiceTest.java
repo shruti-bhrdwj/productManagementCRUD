@@ -6,11 +6,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.company.productmanagement.dto.product.ProductRequest;
 import com.company.productmanagement.dto.product.ProductResponse;
 import com.company.productmanagement.entity.Product;
-import com.company.productmanagement.exception.custom.ProductNotFoundException;
 import com.company.productmanagement.repository.ProductRepository;
 import com.company.productmanagement.service.ProductService;
 
@@ -50,7 +50,6 @@ class ProductServiceTest {
                 .description("Test Description")
                 .price(new BigDecimal("99.99"))
                 .quantity(10)
-                .category("Electronics")
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .build();
@@ -59,8 +58,7 @@ class ProductServiceTest {
                 "Test Product",
                 "Test Description",
                 new BigDecimal("99.99"),
-                10,
-                "Electronics"
+                10
         );
     }
     
@@ -125,7 +123,7 @@ class ProductServiceTest {
         when(productRepository.findById(999L)).thenReturn(Optional.empty());
         
         // When & Then
-        assertThrows(ProductNotFoundException.class, () -> productService.getProductById(999L));
+        assertThrows(ResponseStatusException.class, () -> productService.getProductById(999L));
         
         verify(productRepository).findById(999L);
     }
@@ -140,8 +138,7 @@ class ProductServiceTest {
                 "Updated Product",
                 "Updated Description",
                 new BigDecimal("149.99"),
-                20,
-                "Electronics"
+                20
         );
         
         // When
@@ -176,43 +173,9 @@ class ProductServiceTest {
         when(productRepository.existsById(999L)).thenReturn(false);
         
         // When & Then
-        assertThrows(ProductNotFoundException.class, () -> productService.deleteProduct(999L));
+        assertThrows(ResponseStatusException.class, () -> productService.deleteProduct(999L));
         
         verify(productRepository).existsById(999L);
         verify(productRepository, never()).deleteById(anyLong());
-    }
-    
-    @Test
-    void shouldSearchProductsByName() {
-        // Given
-        when(productRepository.findByNameContainingIgnoreCase("Test"))
-                .thenReturn(Arrays.asList(product));
-        
-        // When
-        List<ProductResponse> products = productService.searchProductsByName("Test");
-        
-        // Then
-        assertNotNull(products);
-        assertEquals(1, products.size());
-        assertEquals("Test Product", products.get(0).name());
-        
-        verify(productRepository).findByNameContainingIgnoreCase("Test");
-    }
-    
-    @Test
-    void shouldGetProductsByCategory() {
-        // Given
-        when(productRepository.findByCategory("Electronics"))
-                .thenReturn(Arrays.asList(product));
-        
-        // When
-        List<ProductResponse> products = productService.getProductsByCategory("Electronics");
-        
-        // Then
-        assertNotNull(products);
-        assertEquals(1, products.size());
-        assertEquals("Electronics", products.get(0).category());
-        
-        verify(productRepository).findByCategory("Electronics");
     }
 }

@@ -22,7 +22,6 @@ import com.company.productmanagement.utils.ApiEndpointConstants;
  * @version 1.0
  */
 @RestController
-@RequestMapping(ApiEndpointConstants.AUTH_BASE)
 @RequiredArgsConstructor
 @Tag(name = "Authentication", description = "Authentication management APIs")
 public class AuthController {

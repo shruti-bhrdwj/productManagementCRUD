@@ -4,9 +4,6 @@ import com.company.productmanagement.entity.Product;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import java.math.BigDecimal;
-import java.util.List;
-
 /**
  * Repository interface for Product entity
  * Provides database operations for product management
@@ -16,30 +13,13 @@ import java.util.List;
  */
 @Repository
 public interface ProductRepository extends JpaRepository<Product, Long> {
-    
-    /**
-     * Find products by category
-     * 
-     * @param category the category to search for
-     * @return list of products in the category
-     */
-    List<Product> findByCategory(String category);
-    
-    /**
-     * Find products by name containing (case-insensitive)
-     * 
-     * @param name the name pattern to search for
-     * @return list of matching products
-     */
-    List<Product> findByNameContainingIgnoreCase(String name);
 
     /**
-     * Find products by price range
+     * Find if product exists by the name
      * 
-     * @param minPrice the minimum price
-     * @param maxPrice the maximum price
-     * @return list of products in the price range
+     * @param name 
+     * @return boolean
      */
-    List<Product> findByPriceBetween(BigDecimal minPrice, BigDecimal maxPrice);
+    Boolean existsByName(String name);
     
 }

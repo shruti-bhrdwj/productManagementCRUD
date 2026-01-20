@@ -4,8 +4,6 @@ import com.company.productmanagement.dto.auth.AuthResponse;
 import com.company.productmanagement.dto.auth.LoginRequest;
 import com.company.productmanagement.dto.auth.RegisterRequest;
 import com.company.productmanagement.entity.User;
-import com.company.productmanagement.exception.custom.InvalidCredentialsException;
-import com.company.productmanagement.exception.custom.UserAlreadyExistsException;
 import com.company.productmanagement.repository.UserRepository;
 import com.company.productmanagement.service.AuthService;
 import com.company.productmanagement.utils.JwtUtils;
@@ -21,6 +19,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.web.server.ResponseStatusException;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -97,7 +96,7 @@ class AuthServiceTest {
         when(userRepository.existsByUsername(registerRequest.username())).thenReturn(true);
         
         // When & Then
-        assertThrows(UserAlreadyExistsException.class, () -> authService.register(registerRequest));
+        assertThrows(ResponseStatusException.class, () -> authService.register(registerRequest));
         
         verify(userRepository).existsByUsername(registerRequest.username());
         verify(userRepository, never()).save(any(User.class));
@@ -131,7 +130,7 @@ class AuthServiceTest {
                 .thenThrow(new BadCredentialsException("Invalid credentials"));
         
         // When & Then
-        assertThrows(InvalidCredentialsException.class, () -> authService.login(loginRequest));
+        assertThrows(ResponseStatusException.class, () -> authService.login(loginRequest));
         
         verify(authenticationManager).authenticate(any(UsernamePasswordAuthenticationToken.class));
         verify(jwtUtils, never()).generateToken(any(User.class));

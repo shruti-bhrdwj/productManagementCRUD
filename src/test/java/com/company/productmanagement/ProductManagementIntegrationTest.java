@@ -122,8 +122,7 @@ class ProductManagementIntegrationTest {
                 "Laptop", 
                 "High-performance laptop", 
                 new BigDecimal("999.99"), 
-                10, 
-                "Electronics"
+                10
         );
         
         // When & Then
@@ -135,18 +134,17 @@ class ProductManagementIntegrationTest {
                 .andExpect(jsonPath("$.id").exists())
                 .andExpect(jsonPath("$.name").value("Laptop"))
                 .andExpect(jsonPath("$.price").value(999.99))
-                .andExpect(jsonPath("$.quantity").value(10))
-                .andExpect(jsonPath("$.category").value("Electronics"));
+                .andExpect(jsonPath("$.quantity").value(10));
         
         // Verify product exists in database
-        assert productRepository.findByNameContainingIgnoreCase("Laptop").size() == 1;
+        assert productRepository.existsByName("Laptop");
     }
     
     @Test
     void shouldFailToCreateProductWithoutAuthentication() throws Exception {
         // Given
         ProductRequest request = new ProductRequest(
-                "Laptop", "Description", new BigDecimal("999.99"), 10, "Electronics");
+                "Laptop", "Description", new BigDecimal("999.99"), 10);
         
         // When & Then
         mockMvc.perform(post("/api/products")
@@ -163,7 +161,7 @@ class ProductManagementIntegrationTest {
                 .description("Description 1")
                 .price(new BigDecimal("99.99"))
                 .quantity(10)
-                .category("Electronics")
+                
                 .build();
         
         Product product2 = Product.builder()
@@ -171,7 +169,6 @@ class ProductManagementIntegrationTest {
                 .description("Description 2")
                 .price(new BigDecimal("149.99"))
                 .quantity(5)
-                .category("Books")
                 .build();
         
         productRepository.save(product1);
@@ -194,7 +191,7 @@ class ProductManagementIntegrationTest {
                 .description("Test Description")
                 .price(new BigDecimal("99.99"))
                 .quantity(10)
-                .category("Electronics")
+                
                 .build();
         Product savedProduct = productRepository.save(product);
         
@@ -225,7 +222,7 @@ class ProductManagementIntegrationTest {
                 .description("Original Description")
                 .price(new BigDecimal("99.99"))
                 .quantity(10)
-                .category("Electronics")
+                
                 .build();
         Product savedProduct = productRepository.save(product);
         
@@ -233,8 +230,7 @@ class ProductManagementIntegrationTest {
                 "Updated Product",
                 "Updated Description",
                 new BigDecimal("149.99"),
-                20,
-                "Electronics"
+                20
         );
         
         // When & Then
@@ -261,7 +257,6 @@ class ProductManagementIntegrationTest {
                 .description("Description")
                 .price(new BigDecimal("99.99"))
                 .quantity(10)
-                .category("Electronics")
                 .build();
         Product savedProduct = productRepository.save(product);
         Long productId = savedProduct.getId();
@@ -276,93 +271,50 @@ class ProductManagementIntegrationTest {
     }
     
     @Test
-    void shouldSearchProductsByName() throws Exception {
-        // Given
-        Product product1 = Product.builder()
-                .name("Gaming Laptop")
-                .price(new BigDecimal("1299.99"))
-                .quantity(5)
-                .build();
-        
-        Product product2 = Product.builder()
-                .name("Business Laptop")
-                .price(new BigDecimal("899.99"))
-                .quantity(10)
-                .build();
-        
-        Product product3 = Product.builder()
-                .name("Gaming Mouse")
-                .price(new BigDecimal("49.99"))
-                .quantity(50)
-                .build();
-        
-        productRepository.save(product1);
-        productRepository.save(product2);
-        productRepository.save(product3);
-        
-        // When & Then - Search for "Laptop"
-        mockMvc.perform(get("/api/products/search")
-                        .param("name", "Laptop")
-                        .header("Authorization", "Bearer " + jwtToken))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(2)))
-                .andExpect(jsonPath("$[*].name", hasItems("Gaming Laptop", "Business Laptop")));
-    }
-    
-    @Test
-    void shouldGetProductsByCategory() throws Exception {
-        // Given
-        Product product1 = Product.builder()
-                .name("Laptop")
-                .price(new BigDecimal("999.99"))
-                .quantity(10)
-                .category("Electronics")
-                .build();
-        
-        Product product2 = Product.builder()
-                .name("Book")
-                .price(new BigDecimal("19.99"))
-                .quantity(100)
-                .category("Books")
-                .build();
-        
-        Product product3 = Product.builder()
-                .name("Phone")
-                .price(new BigDecimal("699.99"))
-                .quantity(20)
-                .category("Electronics")
-                .build();
-        
-        productRepository.save(product1);
-        productRepository.save(product2);
-        productRepository.save(product3);
-        
-        // When & Then
-        mockMvc.perform(get("/api/products/category/Electronics")
-                        .header("Authorization", "Bearer " + jwtToken))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(2)))
-                .andExpect(jsonPath("$[*].category", everyItem(is("Electronics"))));
-    }
-    
-    @Test
     void shouldValidateProductRequestFields() throws Exception {
-        // Given - Invalid product (negative price, empty name)
-        ProductRequest invalidRequest = new ProductRequest(
-                "", 
-                "Description", 
-                new BigDecimal("-10.00"), 
-                -5, 
-                "Category"
+        ProductRequest invalidName = new ProductRequest(
+            "",
+            "Valid Description",
+            new BigDecimal("10.00"),
+            5
         );
-        
-        // When & Then
+
         mockMvc.perform(post("/api/products")
                         .header("Authorization", "Bearer " + jwtToken)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(invalidRequest)))
+                        .content(objectMapper.writeValueAsString(invalidName)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.code").value("v-1"));
+                .andExpect(jsonPath("$.code").value("v-7"));
+
+        // Price <= 0
+        ProductRequest invalidPrice = new ProductRequest(
+                "Valid Name",
+                "Valid Description",
+                new BigDecimal("0.00"),
+                5
+        );
+
+        mockMvc.perform(post("/api/products")
+                        .header("Authorization", "Bearer " + jwtToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(invalidPrice)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("v-11"));
+
+        //Quantity negative
+        ProductRequest invalidQuantity = new ProductRequest(
+                "Valid Name",
+                "Valid Description",
+                new BigDecimal("10.00"),
+                -5
+        );
+
+        mockMvc.perform(post("/api/products")
+                        .header("Authorization", "Bearer " + jwtToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(invalidQuantity)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("v-13"));
     }
     
     @Test
@@ -390,7 +342,7 @@ class ProductManagementIntegrationTest {
         
         // 2. Create a product
         ProductRequest createRequest = new ProductRequest(
-                "Workflow Product", "Description", new BigDecimal("199.99"), 5, "Test");
+                "Workflow Product", "Description", new BigDecimal("199.99"), 5);
         
         MvcResult createResult = mockMvc.perform(post("/api/products")
                         .header("Authorization", "Bearer " + newUserToken)
@@ -404,7 +356,7 @@ class ProductManagementIntegrationTest {
         
         // 3. Update the product
         ProductRequest updateRequest = new ProductRequest(
-                "Updated Workflow Product", "Updated", new BigDecimal("299.99"), 10, "Test");
+                "Updated Workflow Product", "Updated", new BigDecimal("299.99"), 10);
         
         mockMvc.perform(put("/api/products/" + productId)
                         .header("Authorization", "Bearer " + newUserToken)

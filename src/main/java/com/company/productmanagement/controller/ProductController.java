@@ -24,7 +24,6 @@ import java.util.List;
  * @version 1.0
  */
 @RestController
-@RequestMapping(ApiEndpointConstants.PRODUCT_BASE)
 @RequiredArgsConstructor
 @Tag(name = "Products", description = "Product management CRUD APIs")
 @SecurityRequirement(name = "Bearer Authentication")
@@ -38,7 +37,7 @@ public class ProductController {
      * @param request product creation request
      * @return created product response
      */
-    @PostMapping
+    @PostMapping(ApiEndpointConstants.PRODUCT)
     @Operation(summary = "Create a new product", description = "Creates a new product in the system")
     public ResponseEntity<ProductResponse> createProduct(@Valid @RequestBody ProductRequest request) {
         ProductResponse response = productService.createProduct(request);
@@ -50,7 +49,7 @@ public class ProductController {
      * 
      * @return list of all products
      */
-    @GetMapping
+    @GetMapping(ApiEndpointConstants.PRODUCT)
     @Operation(summary = "Get all products", description = "Retrieves all products from the system")
     public ResponseEntity<List<ProductResponse>> getAllProducts() {
         List<ProductResponse> products = productService.getAllProducts();
@@ -99,29 +98,4 @@ public class ProductController {
         return ResponseEntity.noContent().build();
     }
     
-    /**
-     * Search products by name
-     * 
-     * @param name search term
-     * @return list of matching products
-     */
-    @GetMapping("/search")
-    @Operation(summary = "Search products", description = "Searches products by name")
-    public ResponseEntity<List<ProductResponse>> searchProducts(@RequestParam String name) {
-        List<ProductResponse> products = productService.searchProductsByName(name);
-        return ResponseEntity.ok(products);
-    }
-    
-    /**
-     * Get products by category
-     * 
-     * @param category product category
-     * @return list of products in the category
-     */
-    @GetMapping("/category/{category}")
-    @Operation(summary = "Get products by category", description = "Retrieves all products in a specific category")
-    public ResponseEntity<List<ProductResponse>> getProductsByCategory(@PathVariable String category) {
-        List<ProductResponse> products = productService.getProductsByCategory(category);
-        return ResponseEntity.ok(products);
-    }
 }

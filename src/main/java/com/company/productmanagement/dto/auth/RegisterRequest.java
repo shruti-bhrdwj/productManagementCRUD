@@ -12,15 +12,15 @@ import jakarta.validation.constraints.Size;
  * @param email user's email
  */
 public record RegisterRequest(
-    @NotBlank(message = "{v-01}")
-    @Size(min = 3, max = 50, message = "{v-02}")
+    @NotBlank(message = "v-1")
+    @Size(min = 3, max = 50, message = "v-2")
     String username,
     
-    @NotBlank(message = "{v-03}")
-    @Size(min = 6, message = "{v-04}")
+    @NotBlank(message = "v-3")
+    @Size(min = 6, message = "v-4")
     String password,
     
-    @NotBlank(message = "{v-05}")
-    @Email(message = "{v-06}")
+    @NotBlank(message = "v-5")
+    @Email(message = "v-6")
     String email
 ) {}

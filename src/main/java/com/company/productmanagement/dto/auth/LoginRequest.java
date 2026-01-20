@@ -9,9 +9,9 @@ import jakarta.validation.constraints.NotBlank;
  * @param password user's password
  */
 public record LoginRequest(
-    @NotBlank(message = "{v-01}")
+    @NotBlank(message = "v-1")
     String username,
     
-    @NotBlank(message = "{v-03}")
+    @NotBlank(message = "v-3")
     String password
 ) {}

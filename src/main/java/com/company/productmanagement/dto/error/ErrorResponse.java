@@ -1,6 +1,6 @@
 package com.company.productmanagement.dto.error;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 /**
  * Standard error response DTO for consistent error handling
@@ -10,18 +10,12 @@ import java.time.LocalDateTime;
  * @param timestamp timestamp when error occurred
  */
 public record ErrorResponse(
-    String message,
-    String code,
-    LocalDateTime timestamp
+        String message,
+        String code,
+        Instant timestamp
 ) {
-    /**
-     * Creates an error response with current timestamp
-     * 
-     * @param message error message
-     * @param code error code
-     * @return ErrorResponse instance
-     */
+
     public static ErrorResponse of(String message, String code) {
-        return new ErrorResponse(message, code, LocalDateTime.now());
+        return new ErrorResponse(message, code, Instant.now());
     }
 }

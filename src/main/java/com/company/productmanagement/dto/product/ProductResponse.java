@@ -11,7 +11,6 @@ import java.time.LocalDateTime;
  * @param description product description
  * @param price product price
  * @param quantity available quantity
- * @param category product category
  * @param createdAt creation timestamp
  * @param updatedAt last update timestamp
  */
@@ -21,7 +20,6 @@ public record ProductResponse(
     String description,
     BigDecimal price,
     Integer quantity,
-    String category,
     LocalDateTime createdAt,
     LocalDateTime updatedAt
 ) {}

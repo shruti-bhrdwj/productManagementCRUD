@@ -1,10 +1,13 @@
 package com.company.productmanagement.service;
 
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.company.productmanagement.repository.UserRepository;
 
@@ -26,13 +29,12 @@ public class UserService implements UserDetailsService {
      * 
      * @param username the username to search for
      * @return UserDetails containing user information
-     * @throws UsernameNotFoundException if user not found
+     * @throws ResponseStatusException if user not found
      */
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         return userRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException(
-                        "User not found with username: " + username));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND,"a-2"));
     }
 
 }

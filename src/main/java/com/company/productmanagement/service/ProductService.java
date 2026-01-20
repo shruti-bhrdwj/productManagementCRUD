@@ -1,13 +1,15 @@
 package com.company.productmanagement.service;
 
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.company.productmanagement.dto.product.ProductRequest;
 import com.company.productmanagement.dto.product.ProductResponse;
 import com.company.productmanagement.entity.Product;
-import com.company.productmanagement.exception.custom.ProductNotFoundException;
 import com.company.productmanagement.repository.ProductRepository;
 
 import java.util.List;
@@ -34,12 +36,17 @@ public class ProductService {
      */
     @Transactional
     public ProductResponse createProduct(ProductRequest request) {
+        if (productRepository.existsByName(request.name())) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "pdm-2"
+            );
+        }
         Product product = Product.builder()
                 .name(request.name())
                 .description(request.description())
                 .price(request.price())
                 .quantity(request.quantity() != null ? request.quantity() : 0)
-                .category(request.category())
                 .build();
         
         Product savedProduct = productRepository.save(product);
@@ -64,12 +71,15 @@ public class ProductService {
      * 
      * @param id product ID
      * @return product response
-     * @throws ProductNotFoundException if product not found
+     * @throws ResponseStatusException if product not found
      */
     @Transactional(readOnly = true)
     public ProductResponse getProductById(Long id) {
         Product product = productRepository.findById(id)
-                .orElseThrow(() -> new ProductNotFoundException(id));
+                .orElseThrow(() -> new ResponseStatusException(
+                    HttpStatus.NOT_FOUND, 
+                    "pdm-1" 
+            ));
         return mapToResponse(product);
     }
     
@@ -84,13 +94,14 @@ public class ProductService {
     @Transactional
     public ProductResponse updateProduct(Long id, ProductRequest request) {
         Product product = productRepository.findById(id)
-                .orElseThrow(() -> new ProductNotFoundException(id));
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "pdm-1"));
         
         product.setName(request.name());
         product.setDescription(request.description());
         product.setPrice(request.price());
         product.setQuantity(request.quantity());
-        product.setCategory(request.category());
         
         Product updatedProduct = productRepository.save(product);
         return mapToResponse(updatedProduct);
@@ -100,42 +111,16 @@ public class ProductService {
      * Deletes a product by ID
      * 
      * @param id product ID
-     * @throws ProductNotFoundException if product not found
+     * @throws ResponseStatusException if product not found
      */
     @Transactional
     public void deleteProduct(Long id) {
         if (!productRepository.existsById(id)) {
-            throw new ProductNotFoundException(id);
+            throw new ResponseStatusException(
+                HttpStatus.NOT_FOUND,
+                "pdm-1");
         }
         productRepository.deleteById(id);
-    }
-    
-    /**
-     * Searches products by name
-     * 
-     * @param name search term
-     * @return list of matching products
-     */
-    @Transactional(readOnly = true)
-    public List<ProductResponse> searchProductsByName(String name) {
-        return productRepository.findByNameContainingIgnoreCase(name)
-                .stream()
-                .map(this::mapToResponse)
-                .collect(Collectors.toList());
-    }
-    
-    /**
-     * Retrieves products by category
-     * 
-     * @param category product category
-     * @return list of products in the category
-     */
-    @Transactional(readOnly = true)
-    public List<ProductResponse> getProductsByCategory(String category) {
-        return productRepository.findByCategory(category)
-                .stream()
-                .map(this::mapToResponse)
-                .collect(Collectors.toList());
     }
     
     /**
@@ -151,7 +136,6 @@ public class ProductService {
                 product.getDescription(),
                 product.getPrice(),
                 product.getQuantity(),
-                product.getCategory(),
                 product.getCreatedAt(),
                 product.getUpdatedAt()
         );

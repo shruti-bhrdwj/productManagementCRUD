@@ -22,7 +22,7 @@ spring:
     encoding: UTF-8
 
 jwt:
-  secret: mySecretKey1234567890
+  secret: eW91cl9zdXBlcl9zZWNyZXRfa2V5X3doaWNoX2lzX2F0X2xlYXN0XzMyX2NoYXJzX2xvbmc=
   expiration: 86400000  # 24 hours in milliseconds
 
 server:

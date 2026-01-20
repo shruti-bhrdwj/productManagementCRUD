@@ -16,18 +16,18 @@ public final class ApiEndpointConstants {
     public static final String API_BASE = "/api";
     
     // Authentication Endpoints
-    public static final String AUTH_BASE = API_BASE + "/auth";
-    public static final String AUTH_REGISTER = "/register";
-    public static final String AUTH_LOGIN = "/login";
+    public static final String AUTH = API_BASE + "/auth";
+    public static final String AUTH_REGISTER = AUTH+ "/register";
+    public static final String AUTH_LOGIN = AUTH+ "/login";
     
     // Product Endpoints
-    public static final String PRODUCT_BASE = API_BASE + "/products";
-    public static final String PRODUCT_BY_ID = "/{id}";
+    public static final String PRODUCT = API_BASE + "/products";
+    public static final String PRODUCT_BY_ID = PRODUCT+ "/{id}";
     
     // Public endpoints (no authentication required)
     public static final String[] PUBLIC_ENDPOINTS = {
-        AUTH_BASE + AUTH_REGISTER,
-        AUTH_BASE + AUTH_LOGIN,
+        AUTH_REGISTER,
+        AUTH_LOGIN,
         "/swagger-ui.html",
         "/swagger-ui/**",
         "/swagger-ui/index.html",
