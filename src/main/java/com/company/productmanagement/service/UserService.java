@@ -29,7 +29,7 @@ public class UserService implements UserDetailsService {
      * 
      * @param username the username to search for
      * @return UserDetails containing user information
-     * @throws ResponseStatusException if user not found
+     * @throws UsernameNotFoundException if user not found
      */
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {

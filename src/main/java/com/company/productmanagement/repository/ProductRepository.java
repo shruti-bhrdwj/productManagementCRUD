@@ -1,6 +1,8 @@
 package com.company.productmanagement.repository;
 
 import com.company.productmanagement.entity.Product;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -21,5 +23,13 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
      * @return boolean
      */
     Boolean existsByName(String name);
+
+    /**
+     * Find all product ive paginated results
+     * 
+     * @param pageable 
+     * @return Page<Product>
+     */
+    Page<Product> findAll(Pageable pageable);
     
 }

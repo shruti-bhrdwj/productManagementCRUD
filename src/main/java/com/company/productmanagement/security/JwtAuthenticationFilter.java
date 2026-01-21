@@ -14,6 +14,7 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import com.company.productmanagement.repository.UserRepository;
 import com.company.productmanagement.utils.JwtUtils;
 
 import java.io.IOException;
@@ -31,6 +32,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     
     private final JwtUtils jwtUtils;
     private final UserDetailsService userDetailsService;
+    //private final UserRepository userRepository;
     
     /**
      * Filters incoming requests and validates JWT tokens
@@ -62,6 +64,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             
             // If username is extracted and no authentication exists in context
             if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                //UserDetails userDetails = userRepository.findByUsername(username).get();
                 UserDetails userDetails = userDetailsService.loadUserByUsername(username);
                 
                 // Validate token

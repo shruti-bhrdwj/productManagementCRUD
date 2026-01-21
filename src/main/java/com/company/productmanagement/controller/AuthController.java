@@ -6,6 +6,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import com.company.productmanagement.dto.auth.AuthResponse;
@@ -36,7 +37,7 @@ public class AuthController {
      */
     @PostMapping(ApiEndpointConstants.AUTH_REGISTER)
     @Operation(summary = "Register a new user", description = "Creates a new user account and returns JWT token")
-    public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request) {
+    public ResponseEntity<AuthResponse> register(@Validated(RegisterRequest.ValidationOrder.class) @RequestBody RegisterRequest request) {
         AuthResponse response = authService.register(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }

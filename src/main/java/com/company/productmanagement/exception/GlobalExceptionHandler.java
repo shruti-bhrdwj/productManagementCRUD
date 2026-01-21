@@ -1,10 +1,10 @@
 package com.company.productmanagement.exception;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.MessageSource;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -16,6 +16,7 @@ import com.company.productmanagement.dto.error.ErrorResponse;
 
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.security.access.AccessDeniedException;
 import java.util.Locale;
 
 /**
@@ -39,6 +40,10 @@ public class GlobalExceptionHandler {
         if (ex instanceof ResponseStatusException rse) {
             status = HttpStatus.valueOf(rse.getStatusCode().value());
             code = rse.getReason();
+        } 
+        else if(ex instanceof AccessDeniedException){
+            status = HttpStatus.FORBIDDEN;
+            code = "a-6";
         }
         else if (ex instanceof MethodArgumentNotValidException manv) {
             status = HttpStatus.BAD_REQUEST;
@@ -48,7 +53,7 @@ public class GlobalExceptionHandler {
                     .get(0)
                     .getDefaultMessage();
 
-            code = msgKey.replace("{", "").replace("}", "");
+            code = msgKey;
         }
         else if (ex instanceof BadCredentialsException) {
             status = HttpStatus.UNAUTHORIZED;

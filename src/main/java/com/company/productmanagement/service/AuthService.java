@@ -40,7 +40,7 @@ public class AuthService {
      * 
      * @param request registration request containing user details
      * @return AuthResponse with JWT token
-     * @throws UserAlreadyExistsException if username already exists
+     * @throws ResponseStatusException with CONFLICT if username already exists
      */
     @Transactional
     public AuthResponse register(RegisterRequest request) {
@@ -71,7 +71,7 @@ public class AuthService {
      * 
      * @param request login request containing credentials
      * @return AuthResponse with JWT token
-     * @throws InvalidCredentialsException if credentials are invalid
+     * @throws ResponseStatusException with status UNAUTHORIZED if credentials are invalid
      */
     public AuthResponse login(LoginRequest request) {
         try {

@@ -7,7 +7,13 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 
 import com.company.productmanagement.dto.product.ProductRequest;
 import com.company.productmanagement.dto.product.ProductResponse;
@@ -37,8 +43,9 @@ public class ProductController {
      * @param request product creation request
      * @return created product response
      */
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping(ApiEndpointConstants.PRODUCT)
-    @Operation(summary = "Create a new product", description = "Creates a new product in the system")
+    @Operation(summary = "Create a new product", description = "Creates a new product in the system. Only ADMIN can access")
     public ResponseEntity<ProductResponse> createProduct(@Valid @RequestBody ProductRequest request) {
         ProductResponse response = productService.createProduct(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
@@ -50,9 +57,14 @@ public class ProductController {
      * @return list of all products
      */
     @GetMapping(ApiEndpointConstants.PRODUCT)
-    @Operation(summary = "Get all products", description = "Retrieves all products from the system")
-    public ResponseEntity<List<ProductResponse>> getAllProducts() {
-        List<ProductResponse> products = productService.getAllProducts();
+    @Operation(summary = "Get all products with pagination", description = "Retrieves products from the system with pagination")
+    public ResponseEntity<Page<ProductResponse>> getAllProducts(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "id") String sortBy
+    ) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by(sortBy));
+        Page<ProductResponse> products = productService.getAllProducts(pageable);
         return ResponseEntity.ok(products);
     }
     
@@ -76,8 +88,9 @@ public class ProductController {
      * @param request product update request
      * @return updated product response
      */
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping(ApiEndpointConstants.PRODUCT_BY_ID)
-    @Operation(summary = "Update product", description = "Updates an existing product")
+    @Operation(summary = "Update product", description = "Updates an existing product. only ADMIN can access.")
     public ResponseEntity<ProductResponse> updateProduct(
             @PathVariable Long id,
             @Valid @RequestBody ProductRequest request) {
@@ -91,8 +104,9 @@ public class ProductController {
      * @param id product ID
      * @return no content response
      */
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping(ApiEndpointConstants.PRODUCT_BY_ID)
-    @Operation(summary = "Delete product", description = "Deletes a product from the system")
+    @Operation(summary = "Delete product", description = "Deletes a product from the system. only ADMIN can access.")
     public ResponseEntity<Void> deleteProduct(@PathVariable Long id) {
         productService.deleteProduct(id);
         return ResponseEntity.noContent().build();
