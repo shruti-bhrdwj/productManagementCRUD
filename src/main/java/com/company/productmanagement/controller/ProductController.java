@@ -20,8 +20,6 @@ import com.company.productmanagement.dto.product.ProductResponse;
 import com.company.productmanagement.service.ProductService;
 import com.company.productmanagement.utils.ApiEndpointConstants;
 
-import java.util.List;
-
 /**
  * REST controller for product management operations
  * All endpoints are protected by JWT authentication

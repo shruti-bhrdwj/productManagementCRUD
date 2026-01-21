@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.WebApplicationContext;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -112,8 +113,8 @@ class ProductControllerIT {
     @Test
     @WithMockUser(username = "user", roles = {"USER"})
     void shouldGetAllProductsPaged() throws Exception {
-        productRepository.save(new Product(null, "Product 1", "Desc 1", new BigDecimal("10.0"), 1, null, null));
-        productRepository.save(new Product(null, "Product 2", "Desc 2", new BigDecimal("20.0"), 2, null, null));
+        productRepository.save(new Product(1L, "Product 1", "Desc 1", new BigDecimal("10.0"), 1,  LocalDateTime.now(), LocalDateTime.now()));
+        productRepository.save(new Product(2L, "Product 2", "Desc 2", new BigDecimal("20.0"), 2,  LocalDateTime.now(), LocalDateTime.now()));
 
         mockMvc.perform(get(ApiEndpointConstants.PRODUCT)
                         .param("page", "0")

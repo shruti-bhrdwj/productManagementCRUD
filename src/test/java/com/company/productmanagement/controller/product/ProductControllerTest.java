@@ -7,6 +7,7 @@ import com.company.productmanagement.exception.GlobalExceptionHandler;
 import com.company.productmanagement.service.ProductService;
 import com.company.productmanagement.utils.ApiEndpointConstants;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -14,16 +15,19 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
+
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -34,7 +38,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(ProductController.class)
 @AutoConfigureMockMvc(addFilters = false) // Disable security filters
-@ContextConfiguration(classes = { ProductController.class, GlobalExceptionHandler.class })
+@ContextConfiguration(classes = { ProductController.class, GlobalExceptionHandler.class})
 class ProductControllerTest {
 
         @Autowired
@@ -111,31 +115,36 @@ class ProductControllerTest {
         }
 
         // ----- GET TESTS -----
-        // @Test
-        // void shouldGetAllProductsSuccessfully() throws Exception {
-        //         List<ProductResponse> products = Arrays.asList(
-        //                         new ProductResponse(1L, "Product 1", "Desc 1", new BigDecimal("99.99"),
-        //                                         10, LocalDateTime.now(), LocalDateTime.now()),
-        //                         new ProductResponse(2L, "Product 2", "Desc 2", new BigDecimal("149.99"),
-        //                                         5, LocalDateTime.now(), LocalDateTime.now()));
 
-        //         // Wrap the list in a PageImpl
-        //         Page<ProductResponse> page = new PageImpl<>(products);
+        @Test
+        void shouldGetAllProductsSuccessfully() throws Exception {
+                List<ProductResponse> products = List.of(
+                                new ProductResponse(1L, "Product 1", "Desc 1",
+                                                new BigDecimal("99.99"), 10,
+                                                LocalDateTime.now(), LocalDateTime.now()),
+                                new ProductResponse(2L, "Product 2", "Desc 2",
+                                                new BigDecimal("149.99"), 5,
+                                                LocalDateTime.now(), LocalDateTime.now()));
 
-        //         // Mock the pageable method
-        //         when(productService.getAllProducts(any(Pageable.class)))
-        //                         .thenReturn(page);
+                // Create Pageable and Page with it
+                Pageable pageable = PageRequest.of(0, 10, Sort.by("id"));
+                Page<ProductResponse> page = new PageImpl<>(products, pageable, products.size());
 
-        //         mockMvc.perform(get(ApiEndpointConstants.PRODUCT)
-        //                         .param("page", "0")
-        //                         .param("size", "10")
-        //                         .param("sortBy", "id")
-        //                         .contentType(MediaType.APPLICATION_JSON))
-        //                         .andExpect(status().isOk())
-        //                         .andExpect(jsonPath("$.content.length()").value(2))
-        //                         .andExpect(jsonPath("$.content[0].name").value("Product 1"))
-        //                         .andExpect(jsonPath("$.content[1].name").value("Product 2"));
-        // }
+                when(productService.getAllProducts(any(Pageable.class)))
+                                .thenReturn(page);
+
+                mockMvc.perform(get(ApiEndpointConstants.PRODUCT)
+                                .param("page", "0")
+                                .param("size", "10")
+                                .param("sortBy", "id"))
+                                .andDo(print())
+                                .andExpect(status().isOk())
+                                .andExpect(jsonPath("$.content.length()").value(2))
+                                .andExpect(jsonPath("$.content[0].name").value("Product 1"))
+                                .andExpect(jsonPath("$.content[1].name").value("Product 2"));
+
+                verify(productService).getAllProducts(any(Pageable.class));
+        }
 
         @Test
         void shouldGetProductByIdSuccessfully() throws Exception {
